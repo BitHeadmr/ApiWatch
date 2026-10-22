@@ -1,0 +1,291 @@
+@import 'tailwindcss';
+
+/*
+  APIWatch design tokens.
+  Pale steel paper and navy ink; cobalt only for things you can act on; status colours carry
+  meaning and nothing else. Each status also has its own lamp shape, so colour is never the only cue.
+*/
+:root {
+  --paper: #edf0f2;
+  --raised: #f9fafb;
+  --ink: #16212b;
+  --muted: #55626f;
+  --rule: #d0d7de;
+  --brand: #2447d6;
+  --brand-ink: #ffffff;
+  --up: #138a55;
+  --down: #c9302a;
+  --on-down: #ffffff;
+  --paused: #6f7b88;
+  --unknown: #a8690f;
+  --flash: color-mix(in srgb, var(--brand) 16%, transparent);
+  --down-wash: color-mix(in srgb, var(--down) 7%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0e151c;
+    --raised: #151e27;
+    --ink: #e6ebf0;
+    --muted: #93a1ae;
+    --rule: #26333f;
+    --brand: #8ba3ff;
+    --brand-ink: #0e151c;
+    --up: #3ccb8a;
+    --down: #ff6b62;
+    --on-down: #2a0b09;
+    --paused: #8794a1;
+    --unknown: #e0a93b;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-raised: var(--raised);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-rule: var(--rule);
+  --color-brand: var(--brand);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-on-down: var(--on-down);
+  --color-paused: var(--paused);
+  --color-unknown: var(--unknown);
+  --font-sans: 'Instrument Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* Links are cobalt by default, but any utility class (text-ink, text-muted...) wins. */
+  a {
+    color: var(--brand);
+    text-underline-offset: 3px;
+  }
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Status lamp: a different shape per state, not just a different colour ---------- */
+.lamp {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: none;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+.lamp[data-status='UP'] {
+  color: var(--up);
+}
+
+.lamp[data-status='DOWN'] {
+  color: var(--down);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--down) 25%, transparent);
+}
+
+.lamp[data-status='PAUSED'] {
+  color: var(--paused);
+  background: transparent;
+  border: 2px solid currentColor;
+}
+
+.lamp[data-status='UNKNOWN'] {
+  color: var(--unknown);
+  background: transparent;
+  border: 2px dotted currentColor;
+}
+
+/* ---------- Heartbeat strip: the last 30 checks, oldest on the left ---------- */
+.heartbeat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tick {
+  width: 4px;
+  height: 20px;
+  border-radius: 1px;
+  background: var(--rule);
+  opacity: 0.55;
+}
+
+.tick[data-ok='true'] {
+  background: var(--up);
+  opacity: 1;
+}
+
+.tick[data-ok='false'] {
+  background: var(--down);
+  opacity: 1;
+}
+
+.heartbeat-lg .tick {
+  width: 8px;
+  height: 36px;
+}
+
+.heartbeat-lg {
+  gap: 3px;
+}
+
+/* ---------- Controls ---------- */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-height: 2.35rem;
+    padding: 0 0.95rem;
+    border-radius: 6px;
+    border: 1px solid var(--rule);
+    background: var(--raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 550;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--ink) 40%, var(--rule));
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    border-color: var(--brand);
+    filter: brightness(1.1);
+  }
+
+  .btn-danger {
+    color: var(--down);
+    border-color: color-mix(in srgb, var(--down) 45%, var(--rule));
+  }
+
+  .btn-quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    color: var(--ink);
+    border-color: transparent;
+  }
+
+  .label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 0.3rem;
+  }
+
+  .input {
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid color-mix(in srgb, var(--ink) 28%, var(--rule));
+    background: var(--raised);
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .input[aria-invalid='true'] {
+    border-color: var(--down);
+  }
+
+  textarea.input {
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+}
+
+/* ---------- The one piece of motion: a row that just changed state ---------- */
+@keyframes row-flash {
+  from {
+    background: var(--flash);
+  }
+
+  to {
+    background: transparent;
+  }
+}
+
+.row-flash {
+  animation: row-flash 1.8s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-flash {
+    animation: none;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    var(--rule) 25%,
+    color-mix(in srgb, var(--rule) 50%, var(--paper)) 50%,
+    var(--rule) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

@@ -1,0 +1,56 @@
+### Works with the VS Code "REST Client" extension or JetBrains HTTP client.
+@base = http://localhost:4000/api/v1
+
+### Register (returns an accessToken)
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{ "email": "you@example.com", "password": "password123", "teamName": "My Team" }
+
+### Login
+# @name login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{ "email": "you@example.com", "password": "password123" }
+
+###
+@token = {{login.response.body.accessToken}}
+
+### Who am I?
+GET {{base}}/auth/me
+Authorization: Bearer {{token}}
+
+### Create an endpoint to monitor
+POST {{base}}/endpoints
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Example API",
+  "url": "https://httpbin.org/status/200",
+  "intervalSeconds": 60,
+  "timeoutMs": 10000,
+  "expectedStatus": "200",
+  "failureThreshold": 3
+}
+
+### List endpoints
+GET {{base}}/endpoints
+Authorization: Bearer {{token}}
+
+### Check it right now (returns the result)
+@endpointId = paste-an-id-here
+POST {{base}}/endpoints/{{endpointId}}/check-now
+Authorization: Bearer {{token}}
+
+### Recent check history
+GET {{base}}/endpoints/{{endpointId}}/checks?limit=20
+Authorization: Bearer {{token}}
+
+### Point an endpoint at the mock target (run: npm run mock)
+POST {{base}}/endpoints
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Mock switch", "url": "http://localhost:5001/switch", "intervalSeconds": 30, "failureThreshold": 2 }

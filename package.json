@@ -1,0 +1,28 @@
+{
+  "name": "apiwatch",
+  "private": true,
+  "version": "0.1.0",
+  "description": "API uptime & health monitoring dashboard",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "mock": "node scripts/mock-target.mjs",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e -w apps/api",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "check": "node scripts/check-services.mjs"
+  },
+  "workspaces": [
+    "apps/*"
+  ],
+  "dependencies": {
+    "nodemailer": "^10.1.7"
+  }
+}
