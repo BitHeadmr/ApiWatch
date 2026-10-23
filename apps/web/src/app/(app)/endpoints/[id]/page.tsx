@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { ChannelsPanel } from '@/components/ChannelsPanel';
+import { HistoryCharts } from '@/components/HistoryCharts';
 import { EmptyState, ErrorState, Fact, Heartbeat, Skeleton, StatusLamp } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useData } from '@/lib/data';
@@ -258,6 +259,8 @@ function EndpointDetailView({ id }: { id: string }) {
       <div className="mt-8">
         <Heartbeat recent={stat.recent} large />
       </div>
+
+      <HistoryCharts endpointId={id} />
 
       <section className="mt-14" aria-labelledby="checks-h">
         <h2 id="checks-h" className="display text-3xl">

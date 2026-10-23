@@ -8,6 +8,7 @@ import type {
   EndpointStats,
   Incident,
   IncidentDetail,
+  EndpointHistory,
   User,
 } from './types';
 
@@ -95,6 +96,9 @@ export const api = {
     ),
   recentChecks: (id: string, limit = 50, signal?: AbortSignal) =>
     request<CheckResult[]>(`/endpoints/${id}/checks${qs({ limit })}`, { signal }),
+
+  endpointHistory: (id: string, range: '24h' | '7d', signal?: AbortSignal) =>
+    request<EndpointHistory>(`/stats/endpoints/${encodeURIComponent(id)}/history${qs({ range })}`, { signal }),
 
   overview: (signal?: AbortSignal) =>
     request<{ windowHours: number; endpoints: Record<string, EndpointStats> }>('/stats/overview', {

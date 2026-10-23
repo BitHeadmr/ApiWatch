@@ -139,3 +139,12 @@ export type LiveEvent =
   | { type: 'endpoint.deleted'; data: { id: string } };
 
 export type ConnectionState = 'connecting' | 'live' | 'offline';
+
+export interface HistoryPoint {
+  at: string; checks: number; failures: number; uptime: number | null; avgResponseMs: number | null;
+}
+export interface EndpointHistory {
+  range: '24h' | '7d'; from: string; to: string; bucketMinutes: number;
+  summary: { checks: number; uptime: number | null; avgResponseMs: number | null; p95ResponseMs: number | null };
+  points: HistoryPoint[];
+}

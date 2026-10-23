@@ -125,13 +125,15 @@ A phased plan to build APIWatch from scratch. Each phase ends with something **w
 ## Phase 6 — History Graphs & Stats
 **Goal:** answer "how has this API been doing?"
 
-- [ ] Stats service: uptime % and avg / p95 response time for 24h and 7d
-- [ ] Efficient queries using the `(endpointId, checkedAt)` index
-- [ ] Downsample for charts (e.g. 5-min buckets for 24h, hourly for 7d)
-- [ ] Response-time line chart (Recharts) with failures marked
-- [ ] Uptime bar/heatmap
-- [ ] Range selector (24h / 7d)
-- [ ] **Hourly rollup table** + nightly job to compress/delete old raw results (retention)
+- [x] Stats service: uptime % and avg / p95 response time for 24h and 7d
+- [x] Efficient queries using the `(endpointId, checkedAt)` index
+- [x] Downsample for charts (5-min buckets for 24h, hourly for 7d)
+- [x] Response-time line chart with failed-check buckets marked (custom SVG chart; no chart dependency required)
+- [x] Uptime bar chart
+- [x] Range selector (24h / 7d)
+- [x] **Hourly rollup table** + nightly job to compress/delete raw results older than 7 days
+
+Implementation notes: `GET /stats/endpoints/:endpointId/history?range=24h|7d` returns summary metrics and downsampled chart points. History is scoped to the authenticated user's team. Retention runs on startup and every 24 hours; hourly aggregates are upserted before raw results older than seven days are deleted. Run the API and web test/build commands before treating this phase as release-verified. (retention)
 
 **Done when:** graphs load fast with weeks of data and old raw rows are cleaned up automatically.
 

@@ -14,6 +14,7 @@ import { Endpoint, EndpointSchema } from './schemas/endpoint.schema.js';
 import { Incident, IncidentSchema } from './schemas/incident.schema.js';
 import { Team, TeamSchema } from './schemas/team.schema.js';
 import { User, UserSchema } from './schemas/user.schema.js';
+import { StatsRollup, StatsRollupSchema } from './schemas/stats-rollup.schema.js';
 
 /** Connects to MongoDB and registers every model, globally available for injection. */
 @Global()
@@ -39,6 +40,7 @@ import { User, UserSchema } from './schemas/user.schema.js';
       { name: Incident.name, schema: IncidentSchema },
       { name: AlertChannel.name, schema: AlertChannelSchema },
       { name: AlertLog.name, schema: AlertLogSchema },
+      { name: StatsRollup.name, schema: StatsRollupSchema },
     ]),
   ],
   exports: [MongooseModule],
