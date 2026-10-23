@@ -19,6 +19,7 @@ import { SchedulerService } from '../scheduler/scheduler.service.js';
 import type { CreateEndpointDto } from './dto/create-endpoint.dto.js';
 import type { UpdateEndpointDto } from './dto/update-endpoint.dto.js';
 import { EventsService } from '../events/events.service.js';
+import { assertTargetUrlAllowed, UnsafeTargetError } from '../checker/ssrf.js';
 
 const MAX_HEADERS = 20;
 
@@ -56,6 +57,7 @@ export class EndpointsService {
   }
 
   async create(teamId: string, dto: CreateEndpointDto) {
+    this.validateTargetUrl(dto.url);
     this.validateRules(
       dto.intervalSeconds ?? 300,
       dto.timeoutMs ?? 10_000,
@@ -76,6 +78,7 @@ export class EndpointsService {
 
   async update(teamId: string, id: string, dto: UpdateEndpointDto) {
     const current = await this.get(teamId, id);
+    if (dto.url !== undefined) this.validateTargetUrl(dto.url);
     this.validateRules(
       dto.intervalSeconds ?? current.intervalSeconds,
       dto.timeoutMs ?? current.timeoutMs,
@@ -213,6 +216,15 @@ export class EndpointsService {
       this.log.warn(
         `Scheduling update for ${endpointId} failed: ${(err as Error).message}`,
       );
+    }
+  }
+
+  private validateTargetUrl(input: string) {
+    try {
+      assertTargetUrlAllowed(input);
+    } catch (err) {
+      if (err instanceof UnsafeTargetError) throw new BadRequestException(err.message);
+      throw new BadRequestException('Invalid target URL');
     }
   }
 

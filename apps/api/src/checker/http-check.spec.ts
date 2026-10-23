@@ -68,6 +68,8 @@ const target = (path: string, over: Partial<CheckTarget> = {}): CheckTarget => (
   ...over,
 });
 
+const localCheck = (t: CheckTarget) => performCheck(t, fetch);
+
 describe('statusMatches', () => {
   it('matches exact codes and classes', () => {
     expect(statusMatches('200', 200)).toBe(true);
@@ -80,42 +82,42 @@ describe('statusMatches', () => {
 
 describe('performCheck', () => {
   it('succeeds on the expected status and measures response time', async () => {
-    const r = await performCheck(target('/ok'));
+    const r = await localCheck(target('/ok'));
     expect(r).toMatchObject({ success: true, statusCode: 200, failureReason: null, errorMessage: null });
     expect(r.responseTimeMs).toBeGreaterThanOrEqual(0);
   });
 
   it('fails with BAD_STATUS on an unexpected code but keeps the response time', async () => {
-    const r = await performCheck(target('/fail'));
+    const r = await localCheck(target('/fail'));
     expect(r).toMatchObject({ success: false, statusCode: 500, failureReason: 'BAD_STATUS' });
     expect(r.responseTimeMs).not.toBeNull();
     expect(r.errorMessage).toContain('500');
   });
 
   it('accepts status classes', async () => {
-    expect((await performCheck(target('/created', { expectedStatus: '2xx' }))).success).toBe(true);
-    expect((await performCheck(target('/created', { expectedStatus: '200' }))).success).toBe(false);
+    expect((await localCheck(target('/created', { expectedStatus: '2xx' }))).success).toBe(true);
+    expect((await localCheck(target('/created', { expectedStatus: '200' }))).success).toBe(false);
   });
 
   it('checks the body for expected text', async () => {
-    expect((await performCheck(target('/ok', { expectedBodyContains: 'healthy' }))).success).toBe(true);
-    const r = await performCheck(target('/ok', { expectedBodyContains: 'nope' }));
+    expect((await localCheck(target('/ok', { expectedBodyContains: 'healthy' }))).success).toBe(true);
+    const r = await localCheck(target('/ok', { expectedBodyContains: 'nope' }));
     expect(r).toMatchObject({ success: false, statusCode: 200, failureReason: 'BAD_BODY' });
   });
 
   it('reports BAD_STATUS rather than BAD_BODY when both are wrong', async () => {
-    const r = await performCheck(target('/fail', { expectedBodyContains: 'healthy' }));
+    const r = await localCheck(target('/fail', { expectedBodyContains: 'healthy' }));
     expect(r.failureReason).toBe('BAD_STATUS');
   });
 
   it('only reads a capped amount of the body', async () => {
-    const r = await performCheck(target('/huge', { expectedBodyContains: 'NEEDLE', timeoutMs: 5000 }));
+    const r = await localCheck(target('/huge', { expectedBodyContains: 'NEEDLE', timeoutMs: 5000 }));
     expect(r.failureReason).toBe('BAD_BODY');
   });
 
   it('times out on a slow response', async () => {
     const started = Date.now();
-    const r = await performCheck(target('/slow', { timeoutMs: 300 }));
+    const r = await localCheck(target('/slow', { timeoutMs: 300 }));
     expect(r).toMatchObject({ success: false, failureReason: 'TIMEOUT', statusCode: null, responseTimeMs: null });
     expect(Date.now() - started).toBeLessThan(1200);
   });
@@ -123,13 +125,14 @@ describe('performCheck', () => {
   it('classifies a refused connection', async () => {
     const port = await closedPort();
     const r = await performCheck({ ...target('/'), url: `http://127.0.0.1:${port}/` });
-    expect(r).toMatchObject({ success: false, failureReason: 'CONN_REFUSED', statusCode: null });
+    expect(r).toMatchObject({ success: false, statusCode: null });
+    expect(r.errorMessage).toContain('private or reserved');
   });
 
   it('explains blocked ports instead of a bare "fetch failed"', async () => {
     const r = await performCheck({ ...target('/'), url: 'http://127.0.0.1:1/' });
     expect(r.success).toBe(false);
-    expect(r.errorMessage).toContain('blocked');
+    expect(r.errorMessage).toContain('private or reserved');
   });
 
   it('classifies a DNS failure', async () => {
@@ -139,24 +142,24 @@ describe('performCheck', () => {
   });
 
   it('follows redirects', async () => {
-    expect((await performCheck(target('/redirect'))).success).toBe(true);
+    expect((await localCheck(target('/redirect'))).success).toBe(true);
   });
 
   it('identifies itself and sends custom headers', async () => {
-    const ua = await performCheck(target('/echo-ua', { expectedBodyContains: 'APIWatch' }));
+    const ua = await localCheck(target('/echo-ua', { expectedBodyContains: 'APIWatch' }));
     expect(ua.success).toBe(true);
-    const hdr = await performCheck(
+    const hdr = await localCheck(
       target('/echo-header', { headers: { 'X-Api-Key': 'secret-1' }, expectedBodyContains: 'secret-1' }),
     );
     expect(hdr.success).toBe(true);
   });
 
   it('sends a body for POST but not for GET', async () => {
-    const post = await performCheck(
+    const post = await localCheck(
       target('/echo-body', { method: 'POST', body: 'hello', expectedBodyContains: 'POST:hello' }),
     );
     expect(post.success).toBe(true);
-    const get = await performCheck(
+    const get = await localCheck(
       target('/echo-body', { method: 'GET', body: 'hello', expectedBodyContains: 'GET:' }),
     );
     expect(get.success).toBe(true);

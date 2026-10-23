@@ -1,4 +1,5 @@
 import type { CheckOutcome, CheckTarget, FailureReason } from './types.js';
+import { safeFetch } from './safe-fetch.js';
 
 /** Only this much of a response body is read when checking for expected content. */
 export const MAX_BODY_BYTES = 1024 * 1024;
@@ -91,7 +92,7 @@ async function readCappedBody(res: Response): Promise<string> {
  */
 export async function performCheck(
   target: CheckTarget,
-  fetchImpl: typeof fetch = fetch,
+  fetchImpl: typeof fetch = safeFetch as unknown as typeof fetch,
 ): Promise<CheckOutcome> {
   const started = performance.now();
   const method = target.method.toUpperCase();

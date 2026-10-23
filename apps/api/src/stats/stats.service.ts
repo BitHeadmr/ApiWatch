@@ -196,26 +196,20 @@ export class StatsService implements OnModuleInit, OnModuleDestroy {
       },
     ]);
     // Exact p95 over the selected window. Only numeric successful response times are included.
-
     const responseRows = await this.checks
       .find({
         endpointId: id,
-        checkedAt: {
-          $gte: since,
-          $lte: new Date(now),
-        },
+        checkedAt: { $gte: since, $lte: new Date(now) },
         success: true,
       })
       .sort({ responseTimeMs: 1 })
       .lean();
-
     const values: number[] = responseRows
       .map((r) => r.responseTimeMs)
       .filter(
         (value): value is number =>
           typeof value === 'number' && Number.isFinite(value),
       );
-
     const s = summary[0];
     return {
       range,
@@ -318,11 +312,13 @@ export class StatsService implements OnModuleInit, OnModuleDestroy {
       .limit(RECENT_CHECKS)
       .select({ success: 1, responseTimeMs: 1, checkedAt: 1 })
       .lean();
-    return rows.reverse().map((r) => ({
-      ok: r.success,
-      ms: r.responseTimeMs ?? null,
-      at: r.checkedAt.toISOString(),
-    }));
+    return rows
+      .reverse()
+      .map((r) => ({
+        ok: r.success,
+        ms: r.responseTimeMs ?? null,
+        at: r.checkedAt.toISOString(),
+      }));
   }
 }
 
