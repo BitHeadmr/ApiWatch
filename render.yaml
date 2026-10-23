@@ -1,0 +1,59 @@
+# APIWatch Render Blueprint.
+# Create the blueprint from the repository root. MongoDB and Redis use private
+# Docker services with persistent disks; see deploy/VERCEL-RENDER.md for setup.
+services:
+  - type: web
+    name: apiwatch-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        sync: false
+      - key: CHECK_CONCURRENCY
+        value: 20
+      - key: MIN_INTERVAL_SECONDS
+        value: 30
+      - key: SCHEDULER_ENABLED
+        value: "true"
+      - key: RUN_WORKER
+        value: "true"
+      - key: RECONCILE_INTERVAL_SECONDS
+        value: 300
+      - key: QUEUE_PREFIX
+        value: apiwatch
+
+  - type: pserv
+    name: apiwatch-mongo
+    runtime: docker
+    dockerfilePath: ./apps/infra/mongo/Dockerfile
+    dockerContext: .
+    plan: standard
+    disk:
+      name: apiwatch-mongo-data
+      mountPath: /data/db
+      sizeGB: 1
+
+  - type: pserv
+    name: apiwatch-redis
+    runtime: docker
+    dockerfilePath: ./apps/infra/redis/Dockerfile
+    dockerContext: .
+    plan: standard
+    disk:
+      name: apiwatch-redis-data
+      mountPath: /data
+      sizeGB: 1

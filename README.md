@@ -417,3 +417,35 @@ development data is never touched. They skip with a warning if a server isn't re
 ---
 
 *Built to be understood, not just to run. The scheduling engine is the interesting part, so spend your time there.*
+
+
+## Production deployment with Docker Compose
+
+A production-oriented Compose file is provided at `deploy/compose.production.yml`. It runs the web app, API, MongoDB, and Redis on a private Docker network. Only the web port is published. Put the deployment behind a TLS reverse proxy or cloud load balancer, and expose the API through the public API hostname configured in `NEXT_PUBLIC_API_URL`.
+
+1. Copy `deploy/.env.production.example` to `deploy/.env.production` and set real values. Use a strong random `JWT_SECRET`, a real MongoDB URI, the public web origin in `CORS_ORIGIN`, and the public API URL (including `/api/v1`) in `NEXT_PUBLIC_API_URL`.
+2. Ensure DNS and HTTPS are configured for both the web and API hostnames at your reverse proxy/load balancer.
+3. From the repository root, run:
+
+   ```bash
+   docker compose --env-file deploy/.env.production -f deploy/compose.production.yml up -d --build
+   ```
+
+4. Verify the health route configured by the API and open the web URL. Register a test account and confirm a monitor records checks.
+5. Review logs with:
+
+   ```bash
+   docker compose --env-file deploy/.env.production -f deploy/compose.production.yml logs -f api web
+   ```
+
+Do not commit `deploy/.env.production`. The Compose file intentionally does not publish MongoDB or Redis ports. For production, use managed MongoDB/Redis or configure backups, monitoring, resource limits, and TLS at the edge. The API container currently runs the API and worker together as the application is designed to do so; scale carefully to avoid running duplicate scheduler/worker processes.
+
+### Deployment checklist
+
+- [ ] Build API and web images successfully.
+- [ ] Deploy API and web to a host with persistent MongoDB and Redis.
+- [ ] Configure HTTPS and production secrets.
+- [ ] Verify registration, login, monitor checks, incidents, alerts, and history on the deployed URL.
+- [ ] Add a monitor for APIWatch itself.
+- [ ] Capture real dashboard screenshots and add them to this README.
+- [ ] Publish an architecture diagram or short "how it works" article.
